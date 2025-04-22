@@ -5,7 +5,7 @@ import { retryOperation, RetryOptions } from '../utils/retry'
 import { SolanaConnectionOptions } from '../types/solana'
 
 export class SolanaClient {
-  private connection: Connection
+  private readonly connection: Connection
   private readonly MAX_SIGNATURES_LIMIT: number
   private readonly DELAY_BETWEEN_REQUESTS: number
   private readonly retryOptions: RetryOptions
@@ -26,11 +26,10 @@ export class SolanaClient {
 
   async getOldestSignature(address: string): Promise<string | undefined> {
     let oldestSignature: string | undefined
-    let found = false
     const pubkey = new PublicKey(address)
 
     try {
-      while (!found) {
+      for (;;) {
         const signatures = await retryOperation(async () => {
           const result = await this.connection.getSignaturesForAddress(pubkey, {
             limit: this.MAX_SIGNATURES_LIMIT,
@@ -42,13 +41,13 @@ export class SolanaClient {
 
         if (!signatures.length) break
 
-        oldestSignature = signatures[signatures.length - 1].signature
-        found = signatures.length < this.MAX_SIGNATURES_LIMIT
+        oldestSignature = signatures.at(-1)?.signature
+        if (signatures.length < this.MAX_SIGNATURES_LIMIT) break
       }
 
       return oldestSignature
     } catch (error) {
-      console.error('Error fetching signatures:', error)
+      console.error(`Error fetching signatures: ${error instanceof Error ? error.message : String(error)}`)
       return undefined
     }
   }
@@ -59,17 +58,15 @@ export class SolanaClient {
         this.connection.getParsedTransaction(signature), 
         this.retryOptions
       )
-      return tx?.blockTime
+      return tx?.blockTime ?? null
     } catch (error) {
-      console.error('Error fetching transaction:', error)
+      console.error(`Error fetching transaction: ${error instanceof Error ? error.message : String(error)}`)
       return undefined
     }
   }
 
   async getFirstDeploymentTimestamp(programId: string): Promise<number | null | undefined> {
     const oldestSignature = await this.getOldestSignature(programId)
-    if (!oldestSignature) return undefined
-
-    return this.getTransactionBlockTime(oldestSignature)
+    return oldestSignature ? await this.getTransactionBlockTime(oldestSignature) : undefined
   }
 }
