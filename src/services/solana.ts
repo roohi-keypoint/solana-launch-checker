@@ -1,7 +1,7 @@
 import { Connection, PublicKey } from '@solana/web3.js'
 import { getHeliusApiKey } from '../utils/env'
 import { sleep } from '../utils/time'
-import { retryOperation } from '../utils/retry'
+import { Retryable } from '../utils/retry'
 import { SolanaConnectionOptions } from '../types/solana'
 import { Logger, RetryOptions } from '../types/utils'
 import { createLogger } from '../utils/logger'
@@ -11,7 +11,7 @@ export class SolanaClient {
   private readonly MAX_SIGNATURES_LIMIT: number
   private readonly DELAY_BETWEEN_REQUESTS: number
   private readonly retryOptions: RetryOptions
-  private readonly logger: Logger
+  readonly logger: Logger
 
   constructor({
     apiKey = getHeliusApiKey(), 
@@ -44,14 +44,10 @@ export class SolanaClient {
       for (;;) {
         this.logger.log(`Fetching signatures${oldestSignature ? ` before ${oldestSignature}` : ''}`)
         
-        const signatures = await retryOperation(async () => {
-          const result = await this.connection.getSignaturesForAddress(pubkey, {
-            limit: this.MAX_SIGNATURES_LIMIT,
-            before: oldestSignature
-          })
-          await sleep(this.DELAY_BETWEEN_REQUESTS)
-          return result
-        }, this.retryOptions)
+        const signatures = await this.getSignaturesForAddress(pubkey, {
+          limit: this.MAX_SIGNATURES_LIMIT,
+          before: oldestSignature
+        })
 
         this.logger.log(`Retrieved ${signatures.length} signatures`)
         
@@ -69,14 +65,22 @@ export class SolanaClient {
     }
   }
 
+  @Retryable()
+  private async getSignaturesForAddress(
+    pubkey: PublicKey, 
+    options: { limit: number; before?: string }
+  ): Promise<any[]> {
+    const result = await this.connection.getSignaturesForAddress(pubkey, options)
+    await sleep(this.DELAY_BETWEEN_REQUESTS)
+    return result
+  }
+
+  @Retryable()
   private async getTransactionBlockTime(signature: string): Promise<number | null | undefined> {
     this.logger.log(`Fetching block time for transaction: ${signature}`)
     
     try {
-      const tx = await retryOperation(async () => 
-        this.connection.getParsedTransaction(signature), 
-        this.retryOptions
-      )
+      const tx = await this.connection.getParsedTransaction(signature)
       
       this.logger.log(`Transaction block time: ${tx?.blockTime ?? 'null'}`)
       return tx?.blockTime ?? null

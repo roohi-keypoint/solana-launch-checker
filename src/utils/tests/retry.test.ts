@@ -1,4 +1,4 @@
-import { retryOperation } from '../retry'
+import { retryOperation, createRetryableMethod, Retryable } from '../retry'
 import * as timeUtils from '../time'
 
 jest.mock('../logger', () => ({
@@ -152,6 +152,119 @@ describe('Retry utilities', () => {
           logger: mockLogger
         })
       }).rejects.toThrow('Operation failed after retries')
+    })
+  })
+  
+  describe('createRetryableMethod', () => {
+    it('should create a function that retries on failure', async () => {
+      const mockFn = jest.fn()
+        .mockRejectedValueOnce(new Error('Failure 1'))
+        .mockRejectedValueOnce(new Error('Failure 2'))
+        .mockResolvedValue('success')
+      
+      const retryableFn = createRetryableMethod(mockFn)
+      const result = await retryableFn('arg1', 'arg2')
+      
+      expect(result).toBe('success')
+      expect(mockFn).toHaveBeenCalledTimes(3)
+      expect(mockFn).toHaveBeenCalledWith('arg1', 'arg2')
+    })
+    
+    it('should pass options to retryOperation', async () => {
+      const mockFn = jest.fn().mockResolvedValue('success')
+      const options = { maxRetries: 2, delayMs: 500, useExponentialBackoff: false }
+      
+      const originalRetryOperation = require('../retry').retryOperation
+      jest.spyOn(require('../retry'), 'retryOperation').mockImplementation(
+        (op: any, opts: any) => {
+          expect(opts).toEqual(options)
+          return op()
+        }
+      )
+      
+      const retryableFn = createRetryableMethod(mockFn, options)
+      await retryableFn()
+      
+      expect(require('../retry').retryOperation).toHaveBeenCalledTimes(1)
+      
+      jest.spyOn(require('../retry'), 'retryOperation').mockRestore()
+    })
+  })
+  
+  describe('Retryable decorator', () => {
+    it('should create a method that retries on failure', async () => {
+      class TestClass {
+        count = 0
+        
+        @Retryable()
+        async testMethod(arg: string): Promise<string> {
+          this.count++
+          if (this.count < 3) {
+            throw new Error(`Failure ${this.count}`)
+          }
+          return `success: ${arg}`
+        }
+      }
+      
+      const instance = new TestClass()
+      const result = await instance.testMethod('test-arg')
+      
+      expect(result).toBe('success: test-arg')
+      expect(instance.count).toBe(3)
+    })
+    
+    it('should respect custom options', async () => {
+      const mockLogger = {
+        log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn()
+      }
+      
+      class TestClass {
+        @Retryable({ maxRetries: 1, logger: mockLogger })
+        async failingMethod(): Promise<string> {
+          throw new Error('Always fails')
+        }
+      }
+      
+      const instance = new TestClass()
+      
+      await expect(instance.failingMethod()).rejects.toThrow('Always fails')
+      expect(mockLogger.warn).toHaveBeenCalledTimes(2) // Initial attempt + 1 retry
+    })
+    
+    it('should use class logger if available', async () => {
+      const classLogger = {
+        log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn()
+      }
+      
+      const decoratorLogger = {
+        log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn()
+      }
+      
+      class TestClass {
+        logger = classLogger
+        
+        @Retryable({ maxRetries: 0, logger: decoratorLogger })
+        async testMethod(): Promise<string> {
+          throw new Error('Test error')
+        }
+      }
+      
+      const instance = new TestClass()
+      
+      try {
+        await instance.testMethod()
+      } catch {
+        // Expected to throw
+      }
+      
+      expect(classLogger.warn).toHaveBeenCalledTimes(1)
+      expect(decoratorLogger.warn).not.toHaveBeenCalled()
     })
   })
 })

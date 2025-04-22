@@ -21,7 +21,14 @@ jest.mock('../../utils/env', () => ({
 }))
 
 jest.mock('../../utils/retry', () => ({
-  retryOperation: jest.fn((fn) => fn())
+  retryOperation: jest.fn((fn) => fn()),
+  Retryable: () => (target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor): PropertyDescriptor => {
+    const originalMethod = descriptor.value;
+    descriptor.value = function(...args: any[]) {
+      return originalMethod.apply(this, args);
+    };
+    return descriptor;
+  }
 }))
 
 jest.mock('../../utils/time', () => ({

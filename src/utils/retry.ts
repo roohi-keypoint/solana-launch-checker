@@ -41,3 +41,34 @@ export const retryOperation = async <T>(
   
   throw lastError || new Error('Operation failed after retries')
 }
+
+export const createRetryableMethod = <T extends any[], R>(
+  fn: (...args: T) => Promise<R>,
+  options: RetryOptions = {}
+): ((...args: T) => Promise<R>) => {
+  return async (...args: T): Promise<R> => {
+    return retryOperation(() => fn(...args), options)
+  }
+}
+
+export function Retryable(options: RetryOptions = {}): MethodDecorator {
+  return (
+    target: Object,
+    propertyKey: string | symbol,
+    descriptor: PropertyDescriptor
+  ): PropertyDescriptor => {
+    const originalMethod = descriptor.value as (...args: any[]) => Promise<any>
+    
+    descriptor.value = function(...args: any[]) {
+      const context = this as { logger?: RetryOptions['logger'] }
+      const contextOptions = { 
+        ...options,
+        logger: context.logger || options.logger
+      }
+      
+      return retryOperation(() => originalMethod.apply(this, args), contextOptions)
+    }
+    
+    return descriptor
+  }
+}
