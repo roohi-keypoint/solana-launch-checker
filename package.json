@@ -10,7 +10,8 @@
     "build": "tsc",
     "start": "ts-node src/index.ts",
     "test": "jest",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "rebuild": "npm rebuild"
   },
   "repository": "git@github.com:roohi-keypoint/solana-launch-checker.git",
   "keywords": [

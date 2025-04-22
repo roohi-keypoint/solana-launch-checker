@@ -47,6 +47,13 @@ yarn ts-node src/index.ts <PROGRAM_ID>
 
 Replace `<PROGRAM_ID>` with the Solana program ID you want to check.
 
+## Docker
+
+```sh
+docker build -t solana-launch-checker .
+
+docker run --rm -e HELIUS_API_KEY=your_helius_api_key solana-launch-checker <PROGRAM_ID>
+```
 
 ## License
 MIT
