@@ -1,9 +1,10 @@
 import { Connection, PublicKey } from '@solana/web3.js'
 import { getHeliusApiKey } from '../utils/env'
 import { sleep } from '../utils/time'
-import { retryOperation, RetryOptions } from '../utils/retry'
+import { retryOperation } from '../utils/retry'
 import { SolanaConnectionOptions } from '../types/solana'
-import { Logger, createLogger } from '../utils/logger'
+import { Logger, RetryOptions } from '../types/utils'
+import { createLogger } from '../utils/logger'
 
 export class SolanaClient {
   private readonly connection: Connection

@@ -1,13 +1,6 @@
 import { sleep, calculateBackoff } from './time'
-import { Logger, createLogger } from './logger'
-
-export type RetryOptions = {
-  maxRetries?: number
-  delayMs?: number
-  useExponentialBackoff?: boolean
-  verbose?: boolean
-  logger?: Logger
-}
+import { createLogger } from './logger'
+import { RetryOptions } from '../types/utils'
 
 export const retryOperation = async <T>(
   operation: () => Promise<T>, 
