@@ -21,6 +21,14 @@ yarn install
 yarn build
 ```
 
+## Testing
+
+```sh
+yarn test
+```
+
+This will run all tests in the project using Jest.
+
 ## Usage
 
 ```sh
