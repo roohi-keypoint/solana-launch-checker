@@ -1,14 +1,41 @@
 import 'dotenv/config'
 import { SolanaClient } from './services/solana'
+import { createLogger } from './utils/logger'
+
+const parseArgs = (): { programId: string, verbose: boolean } => {
+  const args = process.argv.slice(2)
+  const verboseIndex = args.indexOf('--verbose')
+  const verbose = verboseIndex !== -1
+  
+  if (verbose) {
+    args.splice(verboseIndex, 1)
+  }
+  
+  const [programId] = args
+  
+  if (!programId) {
+    console.error('Usage: solana-launch-checker <program-id> [--verbose]')
+    process.exit(1)
+  }
+  
+  return { programId, verbose }
+}
 
 const main = async (): Promise<void> => {
-  const [, , programId] = process.argv
-  if (!programId) process.exit(1)
+  const { programId, verbose } = parseArgs()
   
-  const solanaClient = new SolanaClient()
+  const logger = createLogger({ verbose })
+  const solanaClient = new SolanaClient({ verbose })
+  
+  logger.log(`Fetching deployment timestamp for program: ${programId}`)
+  
   const timestamp = await solanaClient.getFirstDeploymentTimestamp(programId)
   
-  if (!timestamp) process.exit(1)
+  if (!timestamp) {
+    logger.error('Failed to retrieve deployment timestamp')
+    process.exit(1)
+  }
+  
   console.log(`${timestamp}`)
 }
 

@@ -4,4 +4,5 @@ export type SolanaConnectionOptions = {
   maxRetries?: number
   maxSignaturesPerRequest?: number
   delayBetweenRequests?: number
+  verbose?: boolean
 }
