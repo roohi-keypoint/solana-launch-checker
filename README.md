@@ -29,6 +29,16 @@ yarn test
 
 This will run all tests in the project using Jest.
 
+### Test Coverage
+
+To run tests with coverage reporting:
+
+```sh
+yarn test:coverage
+```
+
+This generates coverage reports in the `coverage` directory, including HTML reports that can be viewed in a browser.
+
 ## Usage
 
 ```sh

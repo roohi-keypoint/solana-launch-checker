@@ -30,6 +30,9 @@ yarn-error.log*
 .eslintcache
 .cache
 
+# Test coverage
+coverage/
+
 # Yarn
 .yarn/*
 !.yarn/patches

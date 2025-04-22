@@ -2,7 +2,7 @@ import 'dotenv/config'
 import { SolanaClient } from './services/solana'
 import { createLogger } from './utils/logger'
 
-const parseArgs = (): { programId: string, verbose: boolean } => {
+export const parseArgs = (): { programId: string, verbose: boolean } => {
   const args = process.argv.slice(2)
   const verboseIndex = args.indexOf('--verbose')
   const verbose = verboseIndex !== -1
@@ -21,7 +21,7 @@ const parseArgs = (): { programId: string, verbose: boolean } => {
   return { programId, verbose }
 }
 
-const main = async (): Promise<void> => {
+export const main = async (): Promise<void> => {
   const { programId, verbose } = parseArgs()
   
   const logger = createLogger({ verbose })
@@ -39,5 +39,7 @@ const main = async (): Promise<void> => {
   console.log(`${timestamp}`)
 }
 
-main()
+if (require.main === module) {
+  main()
+}
 
