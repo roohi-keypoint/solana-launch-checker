@@ -35,3 +35,20 @@ MIT
 
 ---
 
+## Environment Variables
+
+This project requires a Helius API key. Set it in an environment variable named `HELIUS_API_KEY`.
+
+1. Copy the `.env.example` file to `.env`:
+
+   ```sh
+   cp .env.example .env
+   ```
+
+2. Edit `.env` and replace `your_helius_api_key_here` with your actual Helius API key.
+
+The CLI will automatically use this key when running commands.
+
+---
+
+Contributions welcome.
