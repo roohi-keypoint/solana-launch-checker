@@ -73,7 +73,7 @@ export class SolanaClient {
     this.logger.log(`Fetching block time for transaction: ${signature}`)
     
     try {
-      const tx = await retryOperation(() => 
+      const tx = await retryOperation(async () => 
         this.connection.getParsedTransaction(signature), 
         this.retryOptions
       )
