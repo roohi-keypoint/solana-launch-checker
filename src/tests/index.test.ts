@@ -1,9 +1,21 @@
 import { SolanaClient } from '../services/solana'
 import * as logger from '../utils/logger'
 import * as index from '../index'
+import { parseArgs } from '../utils/cli'
+import { formatTimestampOutput } from '../utils/format'
 
 jest.mock('../services/solana')
 jest.mock('../utils/logger')
+jest.mock('../utils/format', () => ({
+  formatTimestampOutput: jest.fn().mockImplementation((timestamp) => {
+    return JSON.stringify({
+      timestamp,
+      date: '2021-03-30T16:57:36.000Z',
+      relative: '4 years ago'
+    }, null, 2)
+  }),
+  getRelativeTimeString: jest.fn().mockReturnValue('4 years ago')
+}))
 
 describe('Index module', () => {
   const mockExit = jest.spyOn(process, 'exit').mockImplementation((code?: string | number | null | undefined) => undefined as never)
@@ -38,24 +50,24 @@ describe('Index module', () => {
 
     it('should return programId and verbose=false when only programId is provided', () => {
       process.argv.push('program123')
-      const result = index.parseArgs()
+      const result = parseArgs()
       expect(result).toEqual({ programId: 'program123', verbose: false })
     })
 
     it('should return programId and verbose=true when --verbose flag is provided', () => {
       process.argv.push('program123', '--verbose')
-      const result = index.parseArgs()
+      const result = parseArgs()
       expect(result).toEqual({ programId: 'program123', verbose: true })
     })
 
     it('should handle --verbose flag regardless of position', () => {
       process.argv.push('--verbose', 'program123')
-      const result = index.parseArgs()
+      const result = parseArgs()
       expect(result).toEqual({ programId: 'program123', verbose: true })
     })
 
     it('should exit with code 1 when no programId is provided', () => {
-      index.parseArgs()
+      parseArgs()
       expect(mockConsoleError).toHaveBeenCalledWith('Usage: solana-launch-checker <program-id> [--verbose]')
       expect(mockExit).toHaveBeenCalledWith(1)
     })
@@ -73,14 +85,21 @@ describe('Index module', () => {
     })
 
     it('should log deployment timestamp when successfully retrieved', async () => {
-      mockSolanaClient.getFirstDeploymentTimestamp.mockResolvedValue(1617123456)
+      const timestamp = 1617123456
+      mockSolanaClient.getFirstDeploymentTimestamp.mockResolvedValue(timestamp)
+      
+      const expectedOutput = JSON.stringify({
+        timestamp,
+        date: '2021-03-30T16:57:36.000Z',
+        relative: '4 years ago'
+      }, null, 2)
       
       await index.main()
       
       expect(mockCreateLogger).toHaveBeenCalledWith({ verbose: false })
       expect(mockLogger.log).toHaveBeenCalledWith('Fetching deployment timestamp for program: program123')
       expect(mockSolanaClient.getFirstDeploymentTimestamp).toHaveBeenCalledWith('program123')
-      expect(mockConsoleLog).toHaveBeenCalledWith('1617123456')
+      expect(mockConsoleLog).toHaveBeenCalledWith(expectedOutput)
     })
 
     it('should exit with code 1 when timestamp retrieval fails', async () => {
@@ -120,8 +139,7 @@ describe('Index module', () => {
         jest.isolateModules(() => {
           // Force module.exports to have our mocked main function
           const mockExports = {
-            main: index.main,
-            parseArgs: index.parseArgs
+            main: index.main
           };
           
           // Mock the module cache to use our mock exports
@@ -138,6 +156,14 @@ describe('Index module', () => {
           configurable: true
         });
       }
+    })
+
+    it('should log and exit when getFirstDeploymentTimestamp throws an error', async () => {
+      const error = new Error('Network error')
+      mockSolanaClient.getFirstDeploymentTimestamp.mockRejectedValue(error)
+      await index.main()
+      expect(mockLogger.error).toHaveBeenCalledWith('Network error')
+      expect(mockExit).toHaveBeenCalledWith(1)
     })
   })
 })
