@@ -1,0 +1,32 @@
+{
+  "name": "solana-launch-checker",
+  "version": "1.0.0",
+  "description": "CLI tool to fetch the first deployment timestamp of a Solana program using its program ID.",
+  "main": "index.js",
+  "bin": {
+    "solana-launch-checker": "src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "ts-node src/index.ts"
+  },
+  "repository": "git@github.com:roohi-keypoint/solana-launch-checker.git",
+  "keywords": [
+    "solana",
+    "cli",
+    "typescript",
+    "blockchain",
+    "helius",
+    "web3"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.98.0",
+    "axios": "^1.8.4",
+    "dotenv": "^16.5.0"
+  }
+}
