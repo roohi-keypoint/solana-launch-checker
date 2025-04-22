@@ -1,12 +1,12 @@
-import { SolanaClient } from '../services/solana'
-import * as logger from '../utils/logger'
-import * as index from '../index'
-import { parseArgs } from '../utils/cli'
-import { formatTimestampOutput } from '../utils/format'
+import { SolanaClient } from '../src/services/solana'
+import * as logger from '../src/utils/logger'
+import * as index from '../src'
+import { parseArgs } from '../src/utils/cli'
+import { formatTimestampOutput } from '../src/utils/format'
 
-jest.mock('../services/solana')
-jest.mock('../utils/logger')
-jest.mock('../utils/format', () => ({
+jest.mock('../src/services/solana')
+jest.mock('../src/utils/logger')
+jest.mock('../src/utils/format', () => ({
   formatTimestampOutput: jest.fn().mockImplementation((timestamp) => {
     return JSON.stringify({
       timestamp,
@@ -143,10 +143,10 @@ describe('Index module', () => {
           };
           
           // Mock the module cache to use our mock exports
-          jest.doMock('../index', () => mockExports);
+          jest.doMock('../src', () => mockExports);
           
           // Re-require the module to trigger the entry point condition
-          require('../index');
+          require('../src');
         });
         
       } finally {

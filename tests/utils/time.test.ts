@@ -1,4 +1,4 @@
-import { sleep, calculateBackoff } from '../time'
+import { sleep, calculateBackoff } from '../../src/utils/time'
 
 describe('Time utilities', () => {
   describe('sleep', () => {

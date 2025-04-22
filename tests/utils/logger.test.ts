@@ -1,4 +1,4 @@
-import { createLogger } from '../logger'
+import { createLogger } from '../../src/utils/logger'
 
 describe('Logger', () => {
   const originalConsoleLog = console.log

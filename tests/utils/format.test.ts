@@ -1,4 +1,4 @@
-import { getRelativeTimeString, formatTimestampOutput } from '../format'
+import { getRelativeTimeString, formatTimestampOutput } from '../../src/utils/format'
 
 describe('getRelativeTimeString', () => {
   let originalDateNow: () => number

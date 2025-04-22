@@ -1,6 +1,6 @@
-import { SolanaClient } from '../solana'
+import { SolanaClient } from '../../src/services/solana'
 import { Connection } from '@solana/web3.js'
-import * as envUtils from '../../utils/env'
+import * as envUtils from '../../src/utils/env'
 
 jest.mock('@solana/web3.js', () => {
   const originalModule = jest.requireActual('@solana/web3.js')
@@ -16,11 +16,11 @@ jest.mock('@solana/web3.js', () => {
   }
 })
 
-jest.mock('../../utils/env', () => ({
+jest.mock('../../src/utils/env', () => ({
   getHeliusApiKey: jest.fn().mockReturnValue('test-api-key')
 }))
 
-jest.mock('../../utils/retry', () => ({
+jest.mock('../../src/utils/retry', () => ({
   retryOperation: jest.fn((fn) => fn()),
   Retryable: () => (target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor): PropertyDescriptor => {
     const originalMethod = descriptor.value;
@@ -31,11 +31,11 @@ jest.mock('../../utils/retry', () => ({
   }
 }))
 
-jest.mock('../../utils/time', () => ({
+jest.mock('../../src/utils/time', () => ({
   sleep: jest.fn().mockResolvedValue(undefined)
 }))
 
-jest.mock('../../utils/logger', () => ({
+jest.mock('../../src/utils/logger', () => ({
   createLogger: jest.fn(() => ({
     log: jest.fn(),
     warn: jest.fn(),

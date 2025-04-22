@@ -1,7 +1,7 @@
-import { retryOperation, createRetryableMethod, Retryable } from '../retry'
-import * as timeUtils from '../time'
+import { retryOperation, createRetryableMethod, Retryable } from '../../src/utils/retry'
+import * as timeUtils from '../../src/utils/time'
 
-jest.mock('../logger', () => ({
+jest.mock('../../src/utils/logger', () => ({
   createLogger: jest.fn(() => ({
     log: jest.fn(),
     warn: jest.fn(),
@@ -174,8 +174,8 @@ describe('Retry utilities', () => {
       const mockFn = jest.fn().mockResolvedValue('success')
       const options = { maxRetries: 2, delayMs: 500, useExponentialBackoff: false }
       
-      const originalRetryOperation = require('../retry').retryOperation
-      jest.spyOn(require('../retry'), 'retryOperation').mockImplementation(
+      const originalRetryOperation = require('../../src/utils/retry').retryOperation
+      jest.spyOn(require('../../src/utils/retry'), 'retryOperation').mockImplementation(
         (op: any, opts: any) => {
           expect(opts).toEqual(options)
           return op()
@@ -185,9 +185,9 @@ describe('Retry utilities', () => {
       const retryableFn = createRetryableMethod(mockFn, options)
       await retryableFn()
       
-      expect(require('../retry').retryOperation).toHaveBeenCalledTimes(1)
+      expect(require('../../src/utils/retry').retryOperation).toHaveBeenCalledTimes(1)
       
-      jest.spyOn(require('../retry'), 'retryOperation').mockRestore()
+      jest.spyOn(require('../../src/utils/retry'), 'retryOperation').mockRestore()
     })
   })
   

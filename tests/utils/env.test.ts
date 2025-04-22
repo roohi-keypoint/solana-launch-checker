@@ -1,4 +1,4 @@
-import { getHeliusApiKey } from '../env'
+import { getHeliusApiKey } from '../../src/utils/env'
 
 describe('Environment utilities', () => {
   const originalEnv = process.env
